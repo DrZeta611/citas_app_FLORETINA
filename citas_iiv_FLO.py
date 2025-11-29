@@ -166,4 +166,60 @@ if ojo in [t["derecho"], t["ambos"]]:
     if dosis_d > 0:
         for i in range(dosis_d):
             label = t["int_sem"].format(i=i+1)
-            sem = st.number_input
+            sem = st.number_input(label + " OD", min_value=0, max_value=30, value=0, step=1, key=f"int_d_{i}")
+            intervalos_d.append(sem)
+            mostrar_aviso_intervalo(sem)
+
+    if intervalos_d and any(sem > 0 for sem in intervalos_d):
+        fechas = calcular_fechas(fecha_base, intervalos_d)
+        resultado += f"\n**OD ({farmaco_d})**:\n"
+        for i, f in enumerate(fechas):
+            semana_str = formatear_semana(f)
+            resultado += f"Dosis {i+1}: {f.strftime('%d-%m-%Y')} ({semana_str})\n"
+
+# --- Ojo Izquierdo ---
+if ojo in [t["izquierdo"], t["ambos"]]:
+    st.subheader(t["oi"])
+    farmaco_i = st.selectbox(t["farmaco"] + " OI", FARMACOS, key='farm_i')
+    dosis_i = st.number_input(t["dosis"] + " OI", min_value=0, max_value=12, value=0, step=1, key='dosis_i')
+    
+    intervalos_i = []
+    if dosis_i > 0:
+        for i in range(dosis_i):
+            label = t["int_sem"].format(i=i+1)
+            sem = st.number_input(label + " OI", min_value=0, max_value=30, value=0, step=1, key=f"int_i_{i}")
+            intervalos_i.append(sem)
+            mostrar_aviso_intervalo(sem)
+
+    if intervalos_i and any(sem > 0 for sem in intervalos_i):
+        fechas = calcular_fechas(fecha_base, intervalos_i)
+        if resultado:
+            resultado += "\n"
+        resultado += f"**OI ({farmaco_i})**:\n"
+        for i, f in enumerate(fechas):
+            semana_str = formatear_semana(f)
+            resultado += f"Dosis {i+1}: {f.strftime('%d-%m-%Y')} ({semana_str})\n"
+
+# ==========================================================
+# BOTONES DE ACCIÓN
+# ==========================================================
+if resultado:
+    st.markdown("### " + t["plan_generado"])
+    st.code(resultado, language="text")
+    st.download_button(t["descargar"], resultado, "plan_citas.txt", use_container_width=True)
+
+col1, col2 = st.columns([3, 1])
+with col1:
+    if st.button(t["resetear"], use_container_width=True):
+        resetear()
+
+# -------------------- PIE DE PÁGINA CON ENLACES LIMPIOS --------------------
+st.markdown("---")
+st.caption(t["footer"])
+
+# Enlaces limpios con iconos distintos
+col_henares, col_viamed = st.columns(2)
+with col_henares:
+    st.markdown(f"🏥 **[{t['servicio_henares']}](https://www.comunidad.madrid/hospital/henares/profesionales/servicios-quirurgicos/oftalmologia)**")
+with col_viamed:
+    st.markdown(f"🏢 **[{t['servicio_viamed']}](https://www.viamedsalud.com/hospital-santa-elena/encuentra-tu-medico/?Nombre=zarallo&Especialidad=)**")
