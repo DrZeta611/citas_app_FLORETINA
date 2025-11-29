@@ -1,85 +1,110 @@
 import streamlit as st
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
-st.set_page_config(page_title="Citas Intravítreas", page_icon="🩺", layout="centered")
+st.set_page_config(page_title="Citas Intravítreas - Hospital Henares", page_icon="🩺", layout="centered")
 
 TEXTOS = {
     "es": {
-        "title": "🩺 Asistente de Citación - Mácula",
-        "seccion1": "📆 Semanas desde Última Visita", "ultima_visita": "Última visita",
-        "seccion2": "💉 Plan de Tratamiento", "fecha_inicio": "Fecha inicio",
-        "ojo": "Ojo", "elige": "Elige", "derecho": "Derecho", "izquierdo": "Izquierdo", "ambos": "Ambos",
-        "od": "👁️ OD", "oi": "👁️ OI", "farmaco": "Fármaco", "dosis": "Dosis", "int_sem": "Int.{i} (sem)",
-        "plan_generado": "📋 Plan Generado", "descargar": "📥 Descargar", "resetear": "🔄 Resetear",
-        "footer": "© 2025 Dr. Jesús Zarallo MD, PhD", "henares": "🏥 H. Universitario Henares",
-        "viamed": "🏢 Viamed Santa Elena",
-        "aviso_largo": "⚠️ >24 sem. ¿Seguro?", "aviso_corto": "⚠️ <4 sem. ¿Seguro?"
+        "title": "🩺 Asistente de Citación - Consulta de Mácula",
+        "seccion1": "📆 Contador de Semanas desde la Última Visita",
+        "ultima_visita": "Fecha de última visita",
+        "seccion2": "💉 Calculadora de Citas Intravítreas",
+        "fecha_inicio": "Fecha del último tratamiento",
+        "ojo": "Ojo a tratar", "elige": "Elige", "derecho": "Derecho", "izquierdo": "Izquierdo", "ambos": "Ambos",
+        "od": "👁️ Ojo Derecho", "oi": "👁️ Ojo Izquierdo",
+        "farmaco": "Fármaco", "dosis": "Número de dosis", "int_sem": "Intervalo {i} (semanas)",
+        "plan_generado": "📋 Plan de Tratamiento Generado", "descargar": "📥 Descargar Plan", "resetear": "🔄 Resetear todos los campos",
+        "footer": "Aplicación para uso clínico interno – © 2025, Dr. Jesús Zarallo MD, PhD",
+        "servicio_henares": "Hospital Universitario del Henares",
+        "servicio_viamed": "Viamed Santa Elena",
+        "aviso_largo": "⚠️ Ha elegido un valor por encima de 24 semanas. ¿Está seguro?",
+        "aviso_corto": "⚠️ Ha elegido un valor inferior a 4 semanas. ¿Está seguro?"
     },
     "en": {
-        "title": "🩺 Intravitreal Scheduler", "seccion1": "📆 Weeks Since Last Visit", "ultima_visita": "Last visit",
-        "seccion2": "💉 Treatment Plan", "fecha_inicio": "Start date",
-        "ojo": "Eye", "elige": "Choose", "derecho": "Right", "izquierdo": "Left", "ambos": "Both",
-        "od": "👁️ OD", "oi": "👁️ OI", "farmaco": "Drug", "dosis": "Doses", "int_sem": "Int.{i} (wks)",
-        "plan_generado": "📋 Generated Plan", "descargar": "📥 Download", "resetear": "🔄 Reset",
-        "footer": "© 2025 Dr. Jesús Zarallo MD, PhD", "henares": "🏥 H. Universitario Henares",
-        "viamed": "🏢 Viamed Santa Elena",
-        "aviso_largo": "⚠️ >24 wks. Sure?", "aviso_corto": "⚠️ <4 wks. Sure?"
+        "title": "🩺 Intravitreal Scheduling Assistant - Macula Clinic",
+        "seccion1": "📆 Weeks Counter Since Last Visit",
+        "ultima_visita": "Date of last visit",
+        "seccion2": "💉 Intravitreal Appointment Calculator",
+        "fecha_inicio": "Date of last treatment",
+        "ojo": "Eye to treat", "elige": "Choose", "derecho": "Right", "izquierdo": "Left", "ambos": "Both",
+        "od": "👁️ Right Eye", "oi": "👁️ Left Eye",
+        "farmaco": "Drug", "dosis": "Number of doses", "int_sem": "Interval {i} (weeks)",
+        "plan_generado": "📋 Generated Treatment Plan", "descargar": "📥 Download Plan", "resetear": "🔄 Reset All Fields",
+        "footer": "Clinical use application – © 2025, Dr. Jesús Zarallo MD, PhD",
+        "servicio_henares": "Hospital Universitario del Henares",
+        "servicio_viamed": "Viamed Santa Elena",
+        "aviso_largo": "⚠️ You have selected a value above 24 weeks. Are you sure?",
+        "aviso_corto": "⚠️ You have selected a value below 4 weeks. Are you sure?"
     }
 }
 
-# Estado
+# Estado inicial
 if "idioma" not in st.session_state: st.session_state.idioma = "es"
 if "fecha_base" not in st.session_state: st.session_state.fecha_base = date.today()
 
 idioma = st.session_state.idioma
 t = TEXTOS[idioma]
 
-# Idioma
-if st.button("🇪🇸🇬🇧" if idioma == "es" else "🇬🇧🇪🇸"):
-    st.session_state.idioma = "en" if idioma == "es" else "es"
-    st.rerun()
+# Botón idioma
+col_lang, _ = st.columns([1, 4])
+with col_lang:
+    if st.button("🇪🇸🇬🇧" if idioma == "es" else "🇬🇧🇪🇸", key="cambiar_idioma"):
+        st.session_state.idioma = "en" if idioma == "es" else "es"
+        st.rerun()
 
 st.title(t["title"])
 
-def resetear(): 
-    for k in list(st.session_state): 
-        if not k.startswith("idioma"): del st.session_state[k]
+def resetear():
+    for key in list(st.session_state.keys()):
+        if not key.startswith("idioma"):
+            del st.session_state[key]
     st.rerun()
 
 FARMACOS = [
-    "Aflibercept 2mg (Eylea 2mg)", "Aflibercept 8mg (Eylea 8mg)", "Bevacizumab (Avastin)", 
-    "Bevacizumab (Mvasi)", "Brolucizumab (Beovu)", "Brolucizumab (Vsiqq)", "Faricimab (Vabysmo)",
-    "Ranibizumab (Lucentis)", "Ranibizumab (Ranivisio)", "Ranibizumab (Ximluci)", "Ziv-aflibercept (Zaltrap)", "Otro"
+    "Aflibercept 2mg (Eylea 2mg)", "Aflibercept 8mg (Eylea 8mg)",
+    "Bevacizumab (Avastin)", "Bevacizumab (Mvasi)",
+    "Brolucizumab (Beovu)", "Brolucizumab (Vsiqq)",
+    "Faricimab (Vabysmo)",
+    "Ranibizumab (Lucentis)", "Ranibizumab (Ranivisio)", "Ranibizumab (Ximluci)",
+    "Ziv-aflibercept (Zaltrap)", "Otro"
 ]
 
 # SECCIÓN 1
 st.header(t["seccion1"])
-if fecha_ultima := st.date_input(t["ultima_visita"], format="DD/MM/YYYY", key="fecha_ultima"):
+fecha_ultima = st.date_input(t["ultima_visita"], value=None, format="DD/MM/YYYY", key="fecha_ultima")
+if fecha_ultima:
     diff = (date.today() - fecha_ultima).days
     semanas_text = f"**{diff//7} semanas y {diff%7} días**" if idioma == "es" else f"**{diff//7} weeks and {diff%7} days**"
     st.success(semanas_text, icon="✅")
 
 st.divider()
 
-# FUNCIONES
-def semana_laboral(fecha): 
+# FUNCIONES AUXILIARES
+def formatear_semana(fecha):
     lunes = fecha - timedelta(days=fecha.weekday())
-    return f"{lunes.strftime('%d-%m-%Y')} al {(lunes+timedelta(days=4)).strftime('%d-%m-%Y')}"
+    viernes = lunes + timedelta(days=4)
+    return f"{lunes.strftime('%d-%m-%Y')} al {viernes.strftime('%d-%m-%Y')}"
 
-def ajustar_laboral(fecha): 
+def ajustar_laboral(fecha):
     while fecha.weekday() > 4: fecha += timedelta(days=1)
     return fecha
 
-def calcular_fechas(base, ints): 
-    return [ajustar_laboral(base + timedelta(weeks=w)) for w in ints if w > 0]
+def calcular_fechas(base, intervalos):
+    fechas = []
+    acumulado = base
+    for semanas in intervalos:
+        if semanas > 0:
+            acumulado += timedelta(weeks=semanas)
+            fechas.append(ajustar_laboral(acumulado))
+    return fechas
 
-def aviso_intervalo(v): 
-    if v >= 24: st.warning(t["aviso_largo"], icon="⚠️")
-    elif 0 < v < 4: st.warning(t["aviso_corto"], icon="⚠️")
+def mostrar_aviso_intervalo(valor):
+    if valor >= 24: st.warning(t["aviso_largo"], icon="⚠️")
+    elif 0 < valor < 4: st.warning(t["aviso_corto"], icon="⚠️")
 
 # SECCIÓN 2
 st.header(t["seccion2"])
-fecha_base = st.date_input(t["fecha_inicio"], st.session_state.fecha_base, format="DD/MM/YYYY", key="fecha_base")
+fecha_base = st.date_input(t["fecha_inicio"], value=st.session_state.fecha_base, format="DD/MM/YYYY", key="fecha_base")
 ojo = st.selectbox(t["ojo"], [t["elige"], t["derecho"], t["izquierdo"], t["ambos"]], key="ojo")
 
 resultado = ""
@@ -89,39 +114,58 @@ if ojo != t["elige"]:
     with col_od:
         if ojo in [t["derecho"], t["ambos"]]:
             st.subheader(t["od"])
-            f_od = st.selectbox(t["farmaco"], FARMACOS, key="f_od")
-            d_od = st.number_input(t["dosis"], 0, 12, 0, key="d_od")
-            ints_od = [st.number_input(t["int_sem"].format(i=i+1), 0, 52, 0, key=f"i_od_{i}") 
-                      for i in range(d_od)] if d_od else []
-            for i in ints_od: aviso_intervalo(i)
-            if any(i>0 for i in ints_od):
-                fechas = calcular_fechas(fecha_base, ints_od)
-                resultado += f"**OD ({f_od})**:\n" + "\n".join(f"D{i+1}: {f.strftime('%d-%m-%Y')} ({semana_laboral(f)})" 
-                                                             for i,f in enumerate(fechas))
+            farmaco_od = st.selectbox(t["farmaco"] + " OD", FARMACOS, key="f_od")
+            dosis_od = st.number_input(t["dosis"] + " OD", 0, 12, 0, key="d_od")
+            
+            intervalos_od = []
+            if dosis_od > 0:
+                for i in range(dosis_od):
+                    label = t["int_sem"].format(i=i+1)
+                    sem = st.number_input(label + " OD", 0, 52, 0, key=f"int_od_{i}")
+                    intervalos_od.append(sem)
+                    mostrar_aviso_intervalo(sem)
+            
+            if intervalos_od and any(s > 0 for s in intervalos_od):
+                fechas = calcular_fechas(fecha_base, intervalos_od)
+                resultado += f"\n**OD ({farmaco_od})**:\n"
+                for i, f in enumerate(fechas):
+                    resultado += f"Dosis {i+1}: {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})\n"
     
     with col_oi:
         if ojo in [t["izquierdo"], t["ambos"]]:
             st.subheader(t["oi"])
-            f_oi = st.selectbox(t["farmaco"], FARMACOS, key="f_oi")
-            d_oi = st.number_input(t["dosis"], 0, 12, 0, key="d_oi")
-            ints_oi = [st.number_input(t["int_sem"].format(i=i+1), 0, 52, 0, key=f"i_oi_{i}") 
-                      for i in range(d_oi)] if d_oi else []
-            for i in ints_oi: aviso_intervalo(i)
-            if any(i>0 for i in ints_oi) and resultado: resultado += "\n"
-            if any(i>0 for i in ints_oi):
-                fechas = calcular_fechas(fecha_base, ints_oi)
-                resultado += f"**OI ({f_oi})**:\n" + "\n".join(f"D{i+1}: {f.strftime('%d-%m-%Y')} ({semana_laboral(f)})" 
-                                                             for i,f in enumerate(fechas))
+            farmaco_oi = st.selectbox(t["farmaco"] + " OI", FARMACOS, key="f_oi")
+            dosis_oi = st.number_input(t["dosis"] + " OI", 0, 12, 0, key="d_oi")
+            
+            intervalos_oi = []
+            if dosis_oi > 0:
+                for i in range(dosis_oi):
+                    label = t["int_sem"].format(i=i+1)
+                    sem = st.number_input(label + " OI", 0, 52, 0, key=f"int_oi_{i}")
+                    intervalos_oi.append(sem)
+                    mostrar_aviso_intervalo(sem)
+            
+            if intervalos_oi and any(s > 0 for s in intervalos_oi):
+                if resultado: resultado += "\n"
+                fechas = calcular_fechas(fecha_base, intervalos_oi)
+                resultado += f"**OI ({farmaco_oi})**:\n"
+                for i, f in enumerate(fechas):
+                    resultado += f"Dosis {i+1}: {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})\n"
 
 if resultado:
     st.markdown("### " + t["plan_generado"])
-    st.code(resultado)
-    st.download_button(t["descargar"], resultado, "plan.txt")
+    st.code(resultado, language="text")
+    st.download_button(t["descargar"], resultado, "plan_citas.txt", use_container_width=True)
 
-if st.button(t["resetear"]): resetear()
+col1, col2 = st.columns([3, 1])
+with col1:
+    if st.button(t["resetear"], use_container_width=True): resetear()
 
-# PIE
+# PIE DE PÁGINA
 st.markdown("---")
 st.caption(t["footer"])
-st.columns(2)[0].markdown(f"[{t['henares']}](https://www.comunidad.madrid/hospital/henares/profesionales/servicios-quirurgicos/oftalmologia)")
-st.columns(2)[1].markdown(f"[{t['viamed']}](https://www.viamedsalud.com/hospital-santa-elena/encuentra-tu-medico/?Nombre=zarallo&Especialidad=)")
+col_henares, col_viamed = st.columns(2)
+with col_henares:
+    st.markdown(f"🏥 **[{t['servicio_henares']}](https://www.comunidad.madrid/hospital/henares/profesionales/servicios-quirurgicos/oftalmologia)**")
+with col_viamed:
+    st.markdown(f"🏢 **[{t['servicio_viamed']}](https://www.viamedsalud.com/hospital-santa-elena/encuentra-tu-medico/?Nombre=zarallo&Especialidad=)**")
