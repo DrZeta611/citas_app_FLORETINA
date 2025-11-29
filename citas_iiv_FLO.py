@@ -19,7 +19,7 @@ TEXTOS = {
         "ojo": "Ojo a tratar",
         "elige": "Elige", "derecho": "Derecho", "izquierdo": "Izquierdo", "ambos": "Ambos",
         "od": "👁️ Ojo Derecho", "oi": "👁️ Ojo Izquierdo",
-        "farmaco": "Fármaco", "dosis": "Número de dosis", "int_sem": "Intervalo {i+1} (semanas)",
+        "farmaco": "Fármaco", "dosis": "Número de dosis", "int_sem": "Intervalo {i} (semanas)",
         "plan_generado": "📋 Plan de Tratamiento Generado",
         "descargar": "📥 Descargar Plan", "resetear": "🔄 Resetear todos los campos",
         "footer": "Aplicación para uso clínico interno – © 2025, Dr. Jesús Zarallo MD, PhD",
@@ -34,7 +34,7 @@ TEXTOS = {
         "ojo": "Eye to treat",
         "elige": "Choose", "derecho": "Right", "izquierdo": "Left", "ambos": "Both",
         "od": "👁️ Right Eye", "oi": "👁️ Left Eye",
-        "farmaco": "Drug", "dosis": "Number of doses", "int_sem": "Interval {i+1} (weeks)",
+        "farmaco": "Drug", "dosis": "Number of doses", "int_sem": "Interval {i} (weeks)",
         "plan_generado": "📋 Generated Treatment Plan",
         "descargar": "📥 Download Plan", "resetear": "🔄 Reset All Fields",
         "footer": "Clinical use application – © 2025, Dr. Jesús Zarallo MD, PhD",
@@ -148,7 +148,7 @@ if ojo in [t["derecho"], t["ambos"]]:
     
     intervalos_d = []
     for i in range(dosis_d):
-        label = t["int_sem"].format(i=i)
+        label = t["int_sem"].format(i=i+1)  # <-- corrección aquí
         sem = st.number_input(label + " OD", min_value=0, max_value=20, value=4+i, step=1, key=f"int_d_{i}")
         intervalos_d.append(sem)
 
@@ -167,13 +167,13 @@ if ojo in [t["izquierdo"], t["ambos"]]:
     
     intervalos_i = []
     for i in range(dosis_i):
-        label = t["int_sem"].format(i=i)
+        label = t["int_sem"].format(i=i+1)  # <-- corrección aquí
         sem = st.number_input(label + " OI", min_value=0, max_value=20, value=4+i, step=1, key=f"int_i_{i}")
         intervalos_i.append(sem)
 
     if intervalos_i:
         fechas = calcular_fechas(fecha_base, intervalos_i)
-        if resultado:  # Separar OI de OD
+        if resultado:
             resultado += "\n"
         resultado += f"**OI ({farmaco_i})**:\n"
         for i, f in enumerate(fechas):
