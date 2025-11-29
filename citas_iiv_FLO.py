@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import date, datetime, timedelta
+from collections import defaultdict
 
 st.set_page_config(page_title="Citas Intravítreas - Hospital Henares", page_icon="🩺", layout="centered")
 
@@ -105,15 +106,26 @@ def mostrar_aviso_intervalo(valor):
     elif 0 < valor < 4: st.warning(t["aviso_corto"], icon="⚠️")
 
 def generar_programacion_cronologica(fechas_od, farmaco_od, fechas_oi, farmaco_oi):
-    """Genera programación ordenada cronológicamente"""
-    eventos = []
-    for i, fecha in enumerate(fechas_od):
-        eventos.append((fecha, f"OD - {farmaco_od} (D{i+1})"))
-    for i, fecha in enumerate(fechas_oi):
-        eventos.append((fecha, f"OI - {farmaco_oi} (D{i+1})"))
+    """Genera programación ordenada cronológicamente UNIFICANDO días"""
+    eventos_por_dia = defaultdict(list)
     
-    eventos.sort(key=lambda x: x[0])
-    return eventos
+    # OD
+    for i, fecha in enumerate(fechas_od):
+        eventos_por_dia[fecha].append(f"OD - {farmaco_od} (D{i+1})")
+    
+    # OI
+    for i, fecha in enumerate(fechas_oi):
+        eventos_por_dia[fecha].append(f"OI - {farmaco_oi} (D{i+1})")
+    
+    # Ordenar por fecha
+    fechas_ordenadas = sorted(eventos_por_dia.keys())
+    programacion = []
+    
+    for fecha in fechas_ordenadas:
+        tratamientos = ", ".join(eventos_por_dia[fecha])
+        programacion.append((fecha, tratamientos))
+    
+    return programacion
 
 # SECCIÓN 2
 st.header(t["seccion2"])
@@ -174,20 +186,20 @@ if ojo != t["elige"]:
                 for i, f in enumerate(fechas_oi):
                     st.write(f"**Dosis {i+1}:** {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})")
 
-# PROGRAMACIÓN CRONOLÓGICA TOTAL
+# PROGRAMACIÓN CRONOLÓGICA TOTAL (UNA LÍNEA POR DÍA)
 if fechas_od or fechas_oi:
     st.markdown("---")
     st.markdown("### " + t["plan_total"])
     
     eventos = generar_programacion_cronologica(fechas_od, farmaco_od, fechas_oi, farmaco_oi)
     
-    for fecha, descripcion in eventos:
-        st.write(f"**{fecha.strftime('%d-%m-%Y')}:** {descripcion} ({formatear_semana(fecha)})")
+    for fecha, tratamientos in eventos:
+        st.write(f"**{fecha.strftime('%d-%m-%Y')}:** {tratamientos} ({formatear_semana(fecha)})")
     
     # Download completo
     resultado_total = "PROGRAMACIÓN CRONOLÓGICA:\n\n"
-    for fecha, descripcion in eventos:
-        resultado_total += f"{fecha.strftime('%d-%m-%Y')}: {descripcion} ({formatear_semana(fecha)})\n"
+    for fecha, tratamientos in eventos:
+        resultado_total += f"{fecha.strftime('%d-%m-%Y')}: {tratamientos} ({formatear_semana(fecha)})\n"
     
     st.download_button(t["descargar"], resultado_total, "programacion_citas.txt", use_container_width=True)
 
