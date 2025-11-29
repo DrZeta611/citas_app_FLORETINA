@@ -12,7 +12,7 @@ st.set_page_config(
 TEXTOS = {
     "es": {
         "title": "🩺 Asistente de Citación - Consulta de Mácula",
-        "seccion1": "📆 Contador de Semanas desde la Última Visita",
+        "seccion1": "📆 Contador de Semanas desde la ÚLTIMA Visita",
         "ultima_visita": "Fecha de última visita",
         "seccion2": "💉 Calculadora de Citas Intravítreas",
         "fecha_inicio": "Fecha del último tratamiento",
@@ -23,9 +23,8 @@ TEXTOS = {
         "plan_generado": "📋 Plan de Tratamiento Generado",
         "descargar": "📥 Descargar Plan", "resetear": "🔄 Resetear todos los campos",
         "footer": "Aplicación para uso clínico interno – © 2025, Dr. Jesús Zarallo MD, PhD",
-        "servicio": "Servicio de Oftalmología - Hospital Universitario del Henares",
-        "aviso_largo": "⚠️ Ha elegido un valor por encima de 24 semanas. ¿Está seguro?",
-        "aviso_corto": "⚠️ Ha elegido un valor inferior a 4 semanas. ¿Está seguro?"
+        "servicio_henares": "Servicio de Oftalmología - Hospital Universitario del Henares",
+        "servicio_viamed": "Dr. Zarallo Gallardo, Jesús - Viamed Santa Elena"
     },
     "en": {
         "title": "🩺 Intravitreal Scheduling Assistant - Macula Clinic",
@@ -40,9 +39,8 @@ TEXTOS = {
         "plan_generado": "📋 Generated Treatment Plan",
         "descargar": "📥 Download Plan", "resetear": "🔄 Reset All Fields",
         "footer": "Clinical use application – © 2025, Dr. Jesús Zarallo MD, PhD",
-        "servicio": "Ophthalmology Service - Hospital Universitario del Henares",
-        "aviso_largo": "⚠️ You have selected a value above 24 weeks. Are you sure?",
-        "aviso_corto": "⚠️ You have selected a value below 4 weeks. Are you sure?"
+        "servicio_henares": "Ophthalmology Service - Hospital Universitario del Henares",
+        "servicio_viamed": "Dr. Zarallo Gallardo, Jesús - Viamed Santa Elena"
     }
 }
 
@@ -80,7 +78,7 @@ FARMACOS = [
     "Faricimab (Vabysmo)",
     "Ranibizumab (Lucentis)", "Ranibizumab (Ranivisio)", "Ranibizumab (Ximluci)",
     "Ziv-aflibercept (Zaltrap)",
-    "Otro"  # ✅ AÑADIDO AL FINAL
+    "Otro"
 ]
 
 # ==========================================================
@@ -116,7 +114,7 @@ def formatear_semana(fecha):
     return f"{lunes.strftime('%d-%m-%Y')} al {viernes.strftime('%d-%m-%Y')}"
 
 def lunes_a_viernes(fecha):
-    while fecha.weekday() > 4:  # Ajustar a lunes-viernes
+    while fecha.weekday() > 4:
         fecha += timedelta(days=1)
     return fecha
 
@@ -211,7 +209,13 @@ with col1:
     if st.button(t["resetear"], use_container_width=True):
         resetear()
 
-# -------------------- PIE DE PÁGINA --------------------
+# -------------------- PIE DE PÁGINA CON DOS ENLACES --------------------
 st.markdown("---")
 st.caption(t["footer"])
-st.markdown(f"🔗 **[ {t['servicio']} ](https://www.comunidad.madrid/hospital/henares/profesionales/servicios-quirurgicos/oftalmologia)**")
+
+# Enlaces a servicios
+col_henares, col_viamed = st.columns(2)
+with col_henares:
+    st.markdown(f"🔗 **[ {t['servicio_henares']} ]**  \n(https://www.comunidad.madrid/hospital/henares/profesionales/servicios-quirurgicos/oftalmologia)")
+with col_viamed:
+    st.markdown(f"🔗 **[ {t['servicio_viamed']} ]**  \n(https://www.viamedsalud.com/hospital-santa-elena/encuentra-tu-medico/?Nombre=zarallo&Especialidad=)")
