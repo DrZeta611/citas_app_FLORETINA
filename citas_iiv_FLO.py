@@ -20,7 +20,8 @@ TEXTOS = {
         "servicio_henares": "Hospital Universitario del Henares",
         "servicio_viamed": "Viamed Santa Elena",
         "aviso_largo": "⚠️ Ha elegido un valor por encima de 24 semanas. ¿Está seguro?",
-        "aviso_corto": "⚠️ Ha elegido un valor inferior a 4 semanas. ¿Está seguro?"
+        "aviso_corto": "⚠️ Ha elegido un valor inferior a 4 semanas. ¿Está seguro?",
+        "rango_semana": "al"  # ✅ ESPAÑOL
     },
     "en": {
         "title": "🩺 Intravitreal Scheduling Assistant - Macula Clinic",
@@ -37,7 +38,8 @@ TEXTOS = {
         "servicio_henares": "Hospital Universitario del Henares",
         "servicio_viamed": "Viamed Santa Elena",
         "aviso_largo": "⚠️ You have selected a value above 24 weeks. Are you sure?",
-        "aviso_corto": "⚠️ You have selected a value below 4 weeks. Are you sure?"
+        "aviso_corto": "⚠️ You have selected a value below 4 weeks. Are you sure?",
+        "rango_semana": "to"  # ✅ INGLÉS
     }
 }
 
@@ -86,7 +88,7 @@ st.divider()
 def formatear_semana(fecha):
     lunes = fecha - timedelta(days=fecha.weekday())
     viernes = lunes + timedelta(days=4)
-    return f"{lunes.strftime('%d-%m-%Y')} al {viernes.strftime('%d-%m-%Y')}"
+    return f"{lunes.strftime('%d-%m-%Y')} {t['rango_semana']} {viernes.strftime('%d-%m-%Y')}"
 
 def ajustar_laboral(fecha):
     while fecha.weekday() > 4: fecha += timedelta(days=1)
@@ -106,26 +108,13 @@ def mostrar_aviso_intervalo(valor):
     elif 0 < valor < 4: st.warning(t["aviso_corto"], icon="⚠️")
 
 def generar_programacion_cronologica(fechas_od, farmaco_od, fechas_oi, farmaco_oi):
-    """Genera programación ordenada cronológicamente UNIFICANDO días"""
     eventos_por_dia = defaultdict(list)
-    
-    # OD
     for i, fecha in enumerate(fechas_od):
         eventos_por_dia[fecha].append(f"OD - {farmaco_od} (D{i+1})")
-    
-    # OI
     for i, fecha in enumerate(fechas_oi):
         eventos_por_dia[fecha].append(f"OI - {farmaco_oi} (D{i+1})")
-    
-    # Ordenar por fecha
     fechas_ordenadas = sorted(eventos_por_dia.keys())
-    programacion = []
-    
-    for fecha in fechas_ordenadas:
-        tratamientos = ", ".join(eventos_por_dia[fecha])
-        programacion.append((fecha, tratamientos))
-    
-    return programacion
+    return [(fecha, ", ".join(eventos_por_dia[fecha])) for fecha in fechas_ordenadas]
 
 # SECCIÓN 2
 st.header(t["seccion2"])
@@ -137,15 +126,18 @@ fechas_od = []
 farmaco_od = ""
 intervalos_od = []
 dosis_od = 0
+plan_od = []
 
 fechas_oi = []
 farmaco_oi = ""
 intervalos_oi = []
 dosis_oi = 0
+plan_oi = []
 
 if ojo != t["elige"]:
     col_od, col_oi = st.columns(2)
     
+    # COLUMNA OD
     with col_od:
         if ojo in [t["derecho"], t["ambos"]]:
             st.subheader(t["od"])
@@ -162,10 +154,10 @@ if ojo != t["elige"]:
             
             if intervalos_od and any(s > 0 for s in intervalos_od):
                 fechas_od = calcular_fechas(fecha_base, intervalos_od)
-                st.markdown("### " + t["plan_od"])
-                for i, f in enumerate(fechas_od):
-                    st.write(f"**Dosis {i+1}:** {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})")
+                plan_od = [f"Dosis {i+1}: {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})" 
+                          for i, f in enumerate(fechas_od)]
     
+    # COLUMNA OI
     with col_oi:
         if ojo in [t["izquierdo"], t["ambos"]]:
             st.subheader(t["oi"])
@@ -182,11 +174,32 @@ if ojo != t["elige"]:
             
             if intervalos_oi and any(s > 0 for s in intervalos_oi):
                 fechas_oi = calcular_fechas(fecha_base, intervalos_oi)
-                st.markdown("### " + t["plan_oi"])
-                for i, f in enumerate(fechas_oi):
-                    st.write(f"**Dosis {i+1}:** {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})")
+                plan_oi = [f"Dosis {i+1}: {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})" 
+                          for i, f in enumerate(fechas_oi)]
 
-# PROGRAMACIÓN CRONOLÓGICA TOTAL (UNA LÍNEA POR DÍA)
+# ✅ PLANES ALINEADOS CON FÁRMACO EN TÍTULO
+if plan_od or plan_oi:
+    col_plan_od, col_plan_oi = st.columns(2)
+    
+    with col_plan_od:
+        if plan_od:
+            st.markdown(f"### {t['plan_od']} - **{farmaco_od}**")
+            for linea in plan_od:
+                st.write(f"**{linea}**")
+        else:
+            st.markdown("### " + t["plan_od"])
+            st.info("📝 Configurar OD")
+    
+    with col_plan_oi:
+        if plan_oi:
+            st.markdown(f"### {t['plan_oi']} - **{farmaco_oi}**")
+            for linea in plan_oi:
+                st.write(f"**{linea}**")
+        else:
+            st.markdown("### " + t["plan_oi"])
+            st.info("📝 Configurar OI")
+
+# PROGRAMACIÓN CRONOLÓGICA TOTAL
 if fechas_od or fechas_oi:
     st.markdown("---")
     st.markdown("### " + t["plan_total"])
@@ -196,17 +209,15 @@ if fechas_od or fechas_oi:
     for fecha, tratamientos in eventos:
         st.write(f"**{fecha.strftime('%d-%m-%Y')}:** {tratamientos} ({formatear_semana(fecha)})")
     
-    # Download completo
-    resultado_total = "PROGRAMACIÓN CRONOLÓGICA:\n\n"
-    for fecha, tratamientos in eventos:
-        resultado_total += f"{fecha.strftime('%d-%m-%Y')}: {tratamientos} ({formatear_semana(fecha)})\n"
-    
+    resultado_total = "PROGRAMACIÓN CRONOLÓGICA:\n\n" + "\n".join(
+        f"{fecha.strftime('%d-%m-%Y')}: {tratamientos} ({formatear_semana(fecha)})" 
+        for fecha, tratamientos in eventos
+    )
     st.download_button(t["descargar"], resultado_total, "programacion_citas.txt", use_container_width=True)
 
 col1, col2 = st.columns([3, 1])
 with col1:
-    if st.button(t["resetear"], use_container_width=True): 
-        resetear()
+    if st.button(t["resetear"], use_container_width=True): resetear()
 
 # PIE DE PÁGINA
 st.markdown("---")
