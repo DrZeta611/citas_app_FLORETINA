@@ -107,13 +107,28 @@ resultado = ""
 if ojo != t["elige"]:
     col_od, col_oi = st.columns(2)
     
+   # SECCIÓN 2: Calculadora (CORREGIDA)
+st.header(t["seccion2"])
+fecha_base = st.date_input(t["fecha_inicio"], value=st.session_state.fecha_base, format="DD/MM/YYYY", key="fecha_base")
+ojo = st.selectbox(t["ojo"], [t["elige"], t["derecho"], t["izquierdo"], t["ambos"]], key="ojo")
+
+resultado = ""
+if ojo != t["elige"]:
+    col_od, col_oi = st.columns(2)
+    
     with col_od:
         st.subheader(t["od"])
         if ojo in [t["derecho"], t["ambos"]]:
             farmaco_od = st.selectbox(t["farmaco"], FARMACOS, key="f_od")
             dosis_od = st.number_input(t["dosis"], 1, 12, 3, key="d_od")
-            intervalos_od = [st.number_input(t["int_sem"].format(i=i), 0, 20, 4+i, key=f"int_od_{i}") 
-                           for i in range(dosis_od)]
+            
+            # ✅ CORREGIDO: bucle explícito para labels dinámicos
+            intervalos_od = []
+            for i in range(dosis_od):
+                label = t["int_sem"].format(i=i)
+                sem = st.number_input(label, 0, 20, 4+i, key=f"int_od_{i}")
+                intervalos_od.append(sem)
+            
             fechas_od = calcular_fechas(fecha_base, intervalos_od)
             if fechas_od:
                 resultado += f"**OD ({farmaco_od})**:\n"
@@ -126,8 +141,14 @@ if ojo != t["elige"]:
         if ojo in [t["izquierdo"], t["ambos"]]:
             farmaco_oi = st.selectbox(t["farmaco"], FARMACOS, key="f_oi")
             dosis_oi = st.number_input(t["dosis"], 1, 12, 3, key="d_oi")
-            intervalos_oi = [st.number_input(t["int_sem"].format(i=i), 0, 20, 4+i, key=f"int_oi_{i}") 
-                           for i in range(dosis_oi)]
+            
+            # ✅ CORREGIDO: mismo fix para OI
+            intervalos_oi = []
+            for i in range(dosis_oi):
+                label = t["int_sem"].format(i=i)
+                sem = st.number_input(label, 0, 20, 4+i, key=f"int_oi_{i}")
+                intervalos_oi.append(sem)
+            
             fechas_oi = calcular_fechas(fecha_base, intervalos_oi)
             if fechas_oi:
                 resultado += f"\n**OI ({farmaco_oi})**:\n"
@@ -135,9 +156,6 @@ if ojo != t["elige"]:
                     semana_str = formatear_semana(f)
                     resultado += f"Dosis {i+1}: {f.strftime('%d-%m-%Y')} ({semana_str})\n"
 
-# MOSTRAR RESULTADO
-if resultado:
-    st.markdown("### " + t["plan_generado"])
     st.code(resultado, language="text")
     st.download_button(t["descargar"], resultado, "plan_citas.txt")
 
