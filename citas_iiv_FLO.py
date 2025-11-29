@@ -13,6 +13,7 @@ TEXTOS = {
         "ojo": "Ojo a tratar", "elige": "Elige", "derecho": "Derecho", "izquierdo": "Izquierdo", "ambos": "Ambos",
         "od": "👁️ Ojo Derecho", "oi": "👁️ Ojo Izquierdo",
         "farmaco": "Fármaco", "dosis": "Número de dosis", "int_sem": "Intervalo {i} (semanas)",
+        "plan_od": "📋 Plan OD", "plan_oi": "📋 Plan OI", "plan_total": "📅 Programación Cronológica",
         "plan_generado": "📋 Plan de Tratamiento Generado", "descargar": "📥 Descargar Plan", "resetear": "🔄 Resetear todos los campos",
         "footer": "Aplicación para uso clínico interno – © 2025, Dr. Jesús Zarallo MD, PhD",
         "servicio_henares": "Hospital Universitario del Henares",
@@ -29,6 +30,7 @@ TEXTOS = {
         "ojo": "Eye to treat", "elige": "Choose", "derecho": "Right", "izquierdo": "Left", "ambos": "Both",
         "od": "👁️ Right Eye", "oi": "👁️ Left Eye",
         "farmaco": "Drug", "dosis": "Number of doses", "int_sem": "Interval {i} (weeks)",
+        "plan_od": "📋 OD Plan", "plan_oi": "📋 OI Plan", "plan_total": "📅 Chronological Schedule",
         "plan_generado": "📋 Generated Treatment Plan", "descargar": "📥 Download Plan", "resetear": "🔄 Reset All Fields",
         "footer": "Clinical use application – © 2025, Dr. Jesús Zarallo MD, PhD",
         "servicio_henares": "Hospital Universitario del Henares",
@@ -102,12 +104,33 @@ def mostrar_aviso_intervalo(valor):
     if valor >= 24: st.warning(t["aviso_largo"], icon="⚠️")
     elif 0 < valor < 4: st.warning(t["aviso_corto"], icon="⚠️")
 
+def generar_programacion_cronologica(fechas_od, farmaco_od, fechas_oi, farmaco_oi):
+    """Genera programación ordenada cronológicamente"""
+    eventos = []
+    for i, fecha in enumerate(fechas_od):
+        eventos.append((fecha, f"OD - {farmaco_od} (D{i+1})"))
+    for i, fecha in enumerate(fechas_oi):
+        eventos.append((fecha, f"OI - {farmaco_oi} (D{i+1})"))
+    
+    eventos.sort(key=lambda x: x[0])
+    return eventos
+
 # SECCIÓN 2
 st.header(t["seccion2"])
 fecha_base = st.date_input(t["fecha_inicio"], value=st.session_state.fecha_base, format="DD/MM/YYYY", key="fecha_base")
 ojo = st.selectbox(t["ojo"], [t["elige"], t["derecho"], t["izquierdo"], t["ambos"]], key="ojo")
 
-resultado = ""
+# Variables de resultado
+fechas_od = []
+farmaco_od = ""
+intervalos_od = []
+dosis_od = 0
+
+fechas_oi = []
+farmaco_oi = ""
+intervalos_oi = []
+dosis_oi = 0
+
 if ojo != t["elige"]:
     col_od, col_oi = st.columns(2)
     
@@ -126,10 +149,10 @@ if ojo != t["elige"]:
                     mostrar_aviso_intervalo(sem)
             
             if intervalos_od and any(s > 0 for s in intervalos_od):
-                fechas = calcular_fechas(fecha_base, intervalos_od)
-                resultado += f"\n**OD ({farmaco_od})**:\n"
-                for i, f in enumerate(fechas):
-                    resultado += f"Dosis {i+1}: {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})\n"
+                fechas_od = calcular_fechas(fecha_base, intervalos_od)
+                st.markdown("### " + t["plan_od"])
+                for i, f in enumerate(fechas_od):
+                    st.write(f"**Dosis {i+1}:** {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})")
     
     with col_oi:
         if ojo in [t["izquierdo"], t["ambos"]]:
@@ -146,20 +169,32 @@ if ojo != t["elige"]:
                     mostrar_aviso_intervalo(sem)
             
             if intervalos_oi and any(s > 0 for s in intervalos_oi):
-                if resultado: resultado += "\n"
-                fechas = calcular_fechas(fecha_base, intervalos_oi)
-                resultado += f"**OI ({farmaco_oi})**:\n"
-                for i, f in enumerate(fechas):
-                    resultado += f"Dosis {i+1}: {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})\n"
+                fechas_oi = calcular_fechas(fecha_base, intervalos_oi)
+                st.markdown("### " + t["plan_oi"])
+                for i, f in enumerate(fechas_oi):
+                    st.write(f"**Dosis {i+1}:** {f.strftime('%d-%m-%Y')} ({formatear_semana(f)})")
 
-if resultado:
-    st.markdown("### " + t["plan_generado"])
-    st.code(resultado, language="text")
-    st.download_button(t["descargar"], resultado, "plan_citas.txt", use_container_width=True)
+# PROGRAMACIÓN CRONOLÓGICA TOTAL
+if fechas_od or fechas_oi:
+    st.markdown("---")
+    st.markdown("### " + t["plan_total"])
+    
+    eventos = generar_programacion_cronologica(fechas_od, farmaco_od, fechas_oi, farmaco_oi)
+    
+    for fecha, descripcion in eventos:
+        st.write(f"**{fecha.strftime('%d-%m-%Y')}:** {descripcion} ({formatear_semana(fecha)})")
+    
+    # Download completo
+    resultado_total = "PROGRAMACIÓN CRONOLÓGICA:\n\n"
+    for fecha, descripcion in eventos:
+        resultado_total += f"{fecha.strftime('%d-%m-%Y')}: {descripcion} ({formatear_semana(fecha)})\n"
+    
+    st.download_button(t["descargar"], resultado_total, "programacion_citas.txt", use_container_width=True)
 
 col1, col2 = st.columns([3, 1])
 with col1:
-    if st.button(t["resetear"], use_container_width=True): resetear()
+    if st.button(t["resetear"], use_container_width=True): 
+        resetear()
 
 # PIE DE PÁGINA
 st.markdown("---")
