@@ -23,7 +23,9 @@ TEXTOS = {
         "plan_generado": "📋 Plan de Tratamiento Generado",
         "descargar": "📥 Descargar Plan", "resetear": "🔄 Resetear todos los campos",
         "footer": "Aplicación para uso clínico interno – © 2025, Dr. Jesús Zarallo MD, PhD",
-        "servicio": "Servicio de Oftalmología - Hospital Universitario del Henares"
+        "servicio": "Servicio de Oftalmología - Hospital Universitario del Henares",
+        "aviso_largo": "⚠️ Ha elegido un valor por encima de 24 semanas. ¿Está seguro?",
+        "aviso_corto": "⚠️ Ha elegido un valor inferior a 4 semanas. ¿Está seguro?"
     },
     "en": {
         "title": "🩺 Intravitreal Scheduling Assistant - Macula Clinic",
@@ -38,7 +40,9 @@ TEXTOS = {
         "plan_generado": "📋 Generated Treatment Plan",
         "descargar": "📥 Download Plan", "resetear": "🔄 Reset All Fields",
         "footer": "Clinical use application – © 2025, Dr. Jesús Zarallo MD, PhD",
-        "servicio": "Ophthalmology Service - Hospital Universitario del Henares"
+        "servicio": "Ophthalmology Service - Hospital Universitario del Henares",
+        "aviso_largo": "⚠️ You have selected a value above 24 weeks. Are you sure?",
+        "aviso_corto": "⚠️ You have selected a value below 4 weeks. Are you sure?"
     }
 }
 
@@ -68,12 +72,15 @@ def resetear():
             del st.session_state[key]
     st.rerun()
 
-# -------------------- FÁRMACOS SAVESIGHTREGISTRIES --------------------
+# -------------------- FÁRMACOS ORDENADOS + OTRO --------------------
 FARMACOS = [
-    "Bevacizumab (Avastin)", "Aflibercept 8mg (Eylea 8mg)", "Bevacizumab (Mvasi)",
-    "Brolucizumab (Beovu)", "Faricimab (Vabysmo)", "Ranibizumab (Lucentis)",
-    "Brolucizumab (Vsiqq)", "Ranibizumab (Ranivisio)", "Ziv-aflibercept (Zaltrap)",
-    "Ranibizumab (Ximluci)"
+    "Aflibercept 2mg (Eylea 2mg)", "Aflibercept 8mg (Eylea 8mg)",
+    "Bevacizumab (Avastin)", "Bevacizumab (Mvasi)",
+    "Brolucizumab (Beovu)", "Brolucizumab (Vsiqq)",
+    "Faricimab (Vabysmo)",
+    "Ranibizumab (Lucentis)", "Ranibizumab (Ranivisio)", "Ranibizumab (Ximluci)",
+    "Ziv-aflibercept (Zaltrap)",
+    "Otro"  # ✅ AÑADIDO AL FINAL
 ]
 
 # ==========================================================
@@ -122,6 +129,13 @@ def calcular_fechas(base, intervalos):
             fechas.append(lunes_a_viernes(acumulado))
     return fechas
 
+def mostrar_aviso_intervalo(valor):
+    """Muestra aviso si intervalo está fuera de rango recomendado"""
+    if valor >= 24:
+        st.warning(t["aviso_largo"], icon="⚠️")
+    elif valor < 4 and valor > 0:
+        st.warning(t["aviso_corto"], icon="⚠️")
+
 # ==========================================================
 # SECCIÓN 2: CÁLCULO DE CITAS INTRAVÍTREAS
 # ==========================================================
@@ -144,15 +158,17 @@ resultado = ""
 if ojo in [t["derecho"], t["ambos"]]:
     st.subheader(t["od"])
     farmaco_d = st.selectbox(t["farmaco"] + " OD", FARMACOS, key='farm_d')
-    dosis_d = st.number_input(t["dosis"] + " OD", min_value=1, max_value=12, value=3, step=1, key='dosis_d')
+    dosis_d = st.number_input(t["dosis"] + " OD", min_value=0, max_value=12, value=0, step=1, key='dosis_d')
     
     intervalos_d = []
-    for i in range(dosis_d):
-        label = t["int_sem"].format(i=i+1)  # <-- corrección aquí
-        sem = st.number_input(label + " OD", min_value=0, max_value=20, value=4+i, step=1, key=f"int_d_{i}")
-        intervalos_d.append(sem)
+    if dosis_d > 0:
+        for i in range(dosis_d):
+            label = t["int_sem"].format(i=i+1)
+            sem = st.number_input(label + " OD", min_value=0, max_value=30, value=0, step=1, key=f"int_d_{i}")
+            intervalos_d.append(sem)
+            mostrar_aviso_intervalo(sem)
 
-    if intervalos_d:
+    if intervalos_d and any(sem > 0 for sem in intervalos_d):
         fechas = calcular_fechas(fecha_base, intervalos_d)
         resultado += f"\n**OD ({farmaco_d})**:\n"
         for i, f in enumerate(fechas):
@@ -163,15 +179,17 @@ if ojo in [t["derecho"], t["ambos"]]:
 if ojo in [t["izquierdo"], t["ambos"]]:
     st.subheader(t["oi"])
     farmaco_i = st.selectbox(t["farmaco"] + " OI", FARMACOS, key='farm_i')
-    dosis_i = st.number_input(t["dosis"] + " OI", min_value=1, max_value=12, value=3, step=1, key='dosis_i')
+    dosis_i = st.number_input(t["dosis"] + " OI", min_value=0, max_value=12, value=0, step=1, key='dosis_i')
     
     intervalos_i = []
-    for i in range(dosis_i):
-        label = t["int_sem"].format(i=i+1)  # <-- corrección aquí
-        sem = st.number_input(label + " OI", min_value=0, max_value=20, value=4+i, step=1, key=f"int_i_{i}")
-        intervalos_i.append(sem)
+    if dosis_i > 0:
+        for i in range(dosis_i):
+            label = t["int_sem"].format(i=i+1)
+            sem = st.number_input(label + " OI", min_value=0, max_value=30, value=0, step=1, key=f"int_i_{i}")
+            intervalos_i.append(sem)
+            mostrar_aviso_intervalo(sem)
 
-    if intervalos_i:
+    if intervalos_i and any(sem > 0 for sem in intervalos_i):
         fechas = calcular_fechas(fecha_base, intervalos_i)
         if resultado:
             resultado += "\n"
