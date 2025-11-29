@@ -56,7 +56,8 @@ FARMACOS = [
 st.header(t["seccion1"])
 if fecha_ultima := st.date_input(t["ultima_visita"], format="DD/MM/YYYY", key="fecha_ultima"):
     diff = (date.today() - fecha_ultima).days
-    st.success(f"**{diff//7} {['semanas','weeks'][idioma=='en']} y {diff%7} días{days}**" if idioma=="es" else f"**{diff//7} weeks and {diff%7} days**")
+    semanas_text = f"**{diff//7} semanas y {diff%7} días**" if idioma == "es" else f"**{diff//7} weeks and {diff%7} days**"
+    st.success(semanas_text, icon="✅")
 
 st.divider()
 
@@ -89,9 +90,9 @@ if ojo != t["elige"]:
         if ojo in [t["derecho"], t["ambos"]]:
             st.subheader(t["od"])
             f_od = st.selectbox(t["farmaco"], FARMACOS, key="f_od")
-            d_os = st.number_input(t["dosis"], 0, 12, 0, key="d_od")
+            d_od = st.number_input(t["dosis"], 0, 12, 0, key="d_od")
             ints_od = [st.number_input(t["int_sem"].format(i=i+1), 0, 52, 0, key=f"i_od_{i}") 
-                      for i in range(d_os)] if d_os else []
+                      for i in range(d_od)] if d_od else []
             for i in ints_od: aviso_intervalo(i)
             if any(i>0 for i in ints_od):
                 fechas = calcular_fechas(fecha_base, ints_od)
