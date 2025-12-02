@@ -32,7 +32,7 @@ TEXTOS = {
         "ojo": "Eye to treat", "elige": "Choose", "derecho": "Right", "izquierdo": "Left", "ambos": "Both",
         "od": "👁️ Right Eye", "oi": "👁️ Left Eye",
         "farmaco": "Drug", "dosis": "Number of doses", "int_sem": "Interval {i} (weeks)",
-        "plan_od": "📋 OD Plan", "plan_oi": "📋 OI Plan", "plan_total": "📅 Chronological Schedule",
+        "plan_od": "📋 OD Plan", "plan_oi": "📋 OS Plan", "plan_total": "📅 Chronological Schedule",
         "plan_generado": "📋 Generated Treatment Plan", "descargar": "📥 Download Plan", "resetear": "🔄 Reset All Fields",
         "footer": "Clinical use application – © 2025, Dr. Jesús Zarallo MD, PhD",
         "servicio_henares": "Hospital Universitario del Henares",
@@ -53,7 +53,7 @@ t = TEXTOS[idioma]
 # Botón idioma
 col_lang, _ = st.columns([1, 4])
 with col_lang:
-    if st.button("🇪🇸🇬🇧" if idioma == "es" else "🇬🇧🇪🇸", key="cambiar_idioma"):
+    if st.button("🇪🇸/🇬🇧" if idioma == "es" else "🇬🇧/🇪🇸", key="cambiar_idioma"):
         st.session_state.idioma = "en" if idioma == "es" else "es"
         st.rerun()
 
