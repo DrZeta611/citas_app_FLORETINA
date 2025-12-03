@@ -149,13 +149,16 @@ if ojo != t["elige"]:
     with col_od:
         if ojo in [t["derecho"], t["ambos"]]:
             st.subheader(t["od"])
-            farmaco_od = st.selectbox(t["farmaco_od"], FARMACOS, key="f_od")
-            dosis_od = st.number_input(t["dosis_od"], 0, 12, 0, key="d_od")
+            label_farmaco_od = t.get("farmaco_od", t["farmaco"])
+            label_dosis_od = t.get("dosis_od", t["dosis"])
+            farmaco_od = st.selectbox(label_farmaco_od, FARMACOS, key="f_od")
+            dosis_od = st.number_input(label_dosis_od, 0, 12, 0, key="d_od")
             
             intervalos_od = []
             if dosis_od > 0:
                 for i in range(dosis_od):
-                    label = t["int_sem"].format(i=i+1) + " OD"
+                    base_label = t["int_sem"].format(i=i+1)
+                    label = base_label + " OD" if idioma == "en" else base_label
                     sem = st.number_input(label, 0, 52, 0, key=f"int_od_{i}")
                     intervalos_od.append(sem)
                     mostrar_aviso_intervalo(sem)
@@ -169,13 +172,16 @@ if ojo != t["elige"]:
     with col_oi:
         if ojo in [t["izquierdo"], t["ambos"]]:
             st.subheader(t["oi"])
-            farmaco_oi = st.selectbox(t["farmaco_oi"], FARMACOS, key="f_oi")
-            dosis_oi = st.number_input(t["dosis_oi"], 0, 12, 0, key="d_oi")
+            label_farmaco_oi = t.get("farmaco_oi", t["farmaco"])
+            label_dosis_oi = t.get("dosis_oi", t["dosis"])
+            farmaco_oi = st.selectbox(label_farmaco_oi, FARMACOS, key="f_oi")
+            dosis_oi = st.number_input(label_dosis_oi, 0, 12, 0, key="d_oi")
             
             intervalos_oi = []
             if dosis_oi > 0:
                 for i in range(dosis_oi):
-                    label = t["int_sem"].format(i=i+1) + " OS"
+                    base_label = t["int_sem"].format(i=i+1)
+                    label = base_label + " OS" if idioma == "en" else base_label
                     sem = st.number_input(label, 0, 52, 0, key=f"int_oi_{i}")
                     intervalos_oi.append(sem)
                     mostrar_aviso_intervalo(sem)
