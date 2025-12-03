@@ -31,9 +31,9 @@ TEXTOS = {
         "fecha_inicio": "Date of last treatment",
         "ojo": "Eye to treat", "elige": "Choose", "derecho": "Right", "izquierdo": "Left", "ambos": "Both",
         "od": "👁️ OD", "oi": "👁️ OS",
+        "farmaco": "Drug", "dosis": "Number of doses", "int_sem": "Interval {i} (weeks)",
         "farmaco_od": "Drug OD", "farmaco_oi": "Drug OS",
         "dosis_od": "Number of doses OD", "dosis_oi": "Number of doses OS",
-        "int_sem": "Interval {i} (weeks)",
         "plan_od": "📋 OD Plan", "plan_oi": "📋 OS Plan", "plan_total": "📅 Chronological Schedule",
         "plan_generado": "📋 Generated Treatment Plan", "descargar": "📥 Download Plan", "resetear": "🔄 Reset All Fields",
         "footer": "Clinical use application – © 2025, Dr. Jesús Zarallo MD, PhD",
@@ -149,8 +149,8 @@ if ojo != t["elige"]:
     with col_od:
         if ojo in [t["derecho"], t["ambos"]]:
             st.subheader(t["od"])
-            label_farmaco_od = t.get("farmaco_od", t["farmaco"])
-            label_dosis_od = t.get("dosis_od", t["dosis"])
+            label_farmaco_od = t["farmaco_od"] if "farmaco_od" in t else t["farmaco"]
+            label_dosis_od = t["dosis_od"] if "dosis_od" in t else t["dosis"]
             farmaco_od = st.selectbox(label_farmaco_od, FARMACOS, key="f_od")
             dosis_od = st.number_input(label_dosis_od, 0, 12, 0, key="d_od")
             
@@ -172,8 +172,8 @@ if ojo != t["elige"]:
     with col_oi:
         if ojo in [t["izquierdo"], t["ambos"]]:
             st.subheader(t["oi"])
-            label_farmaco_oi = t.get("farmaco_oi", t["farmaco"])
-            label_dosis_oi = t.get("dosis_oi", t["dosis"])
+            label_farmaco_oi = t["farmaco_oi"] if "farmaco_oi" in t else t["farmaco"]
+            label_dosis_oi = t["dosis_oi"] if "dosis_oi" in t else t["dosis"]
             farmaco_oi = st.selectbox(label_farmaco_oi, FARMACOS, key="f_oi")
             dosis_oi = st.number_input(label_dosis_oi, 0, 12, 0, key="d_oi")
             
