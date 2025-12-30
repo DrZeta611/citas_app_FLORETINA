@@ -71,7 +71,7 @@ def resetear():
     st.rerun()
 
 FARMACOS = [
-    "Aflibercept 2mg (Eylea 2mg)", "Aflibercept 2mg (Afqlir), "Aflibercept 8mg (Eylea 8mg)",
+    "Aflibercept 2mg (Eylea 2mg)", "Aflibercept 2mg (Afqlir)", "Aflibercept 8mg (Eylea 8mg)",
     "Bevacizumab (Avastin)", "Bevacizumab (Mvasi)",
     "Brolucizumab (Beovu)", "Brolucizumab (Vsiqq)",
     "Faricimab (Vabysmo)",
